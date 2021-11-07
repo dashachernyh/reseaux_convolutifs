@@ -105,9 +105,6 @@ imgB = MaxPool(imgB)
 imgG = MaxPool(imgG)
 imgR = MaxPool(imgR)
 
-print(imgB.shape)
-print(imgG.shape)
-print(imgR.shape)
 
 img_7 = cv2.merge([imgB, imgG, imgR])
 cv2.imshow('max_pool', img_7)
