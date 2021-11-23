@@ -2,6 +2,18 @@ import cv2
 import numpy as np
 import random
 
+
+def conv(image, kernel):
+     imgB, imgG, imgR = cv2.split(image)
+     kerB, kerG, kerR = cv2.split(kernel)
+# прменили свертку послойно и просуммировали поканально = скаляроное прозведение
+     resB = cv2.filter2D(imgB, -1, kerB)
+     resG = cv2.filter2D(imgG, -1, kerG)
+     resR = cv2.filter2D(imgR, -1, kerR)
+     res = resB + resG + resR
+     return res
+
+
 def MaxPool(img):
     w, h = img.shape
     img_maxp = np.zeros([w - 1, h - 1], dtype='float')
@@ -24,99 +36,49 @@ def Softmax(pix):
 # Лабораторная работа № 2
 
 img = cv2.imread('cheval.jpg')
-w, h, _ = img.shape
-cv2.imshow('input', img)
-# разбиваем на три канала
-imgB, imgG, imgR = cv2.split(img)  # cv2.merge([imgB, imgG, imgR])
+w, h = img.shape[:2]
 
-# слой 1
-n, m = 3, 3
-kernelB = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-kernelG = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-kernelR = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-imgB = cv2.filter2D(imgB, -1, kernelB)
-imgG = cv2.filter2D(imgG, -1, kernelG)
-imgR = cv2.filter2D(imgR, -1, kernelR)
-img_1 = cv2.merge([imgB, imgG, imgR])
-cv2.imshow('layer1', img_1)
+# создаем фильтр 3х3х3
+n, m, k = 3, 3, 3
+kernel_1 = np.array([[[random.randint(-9, 9)for p in range(k)]for j in range(m)]for i in range(n)])
 
-# слой 2
-kernelB = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-kernelG = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-kernelR = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
+kernel_2 = np.array([[[random.randint(-9, 9)for p in range(k)]for j in range(m)]for i in range(n)])
 
-imgB = cv2.filter2D(imgB, -1, kernelB)
-imgG = cv2.filter2D(imgG, -1, kernelG)
-imgR = cv2.filter2D(imgR, -1, kernelR)
-img_2 = cv2.merge([imgB, imgG, imgR])
-cv2.imshow('layer2', img_2)
+kernel_3 = np.array([[[random.randint(-9, 9)for p in range(k)]for j in range(m)]for i in range(n)])
 
-# слой 3
-kernelB = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-kernelG = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-kernelR = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-imgB = cv2.filter2D(imgB, -1, kernelB)
-imgG = cv2.filter2D(imgG, -1, kernelG)
-imgR = cv2.filter2D(imgR, -1, kernelR)
-img_3 = cv2.merge([imgB, imgG, imgR])
-cv2.imshow('layer3', img_3)
+kernel_4 = np.array([[[random.randint(-9, 9)for p in range(k)]for j in range(m)]for i in range(n)])
 
-# слой 4
-kernelB = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-kernelG = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-kernelR = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-imgB = cv2.filter2D(imgB, -1, kernelB)
-imgG = cv2.filter2D(imgG, -1, kernelG)
-imgR = cv2.filter2D(imgR, -1, kernelR)
-img_4 = cv2.merge([imgB, imgG, imgR])
-cv2.imshow('layer4', img_4)
+kernel_5 = np.array([[[random.randint(-9, 9)for p in range(k)]for j in range(m)]for i in range(n)])
 
-# слой 5
-kernelB = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-kernelG = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-kernelR = np.array([[random.randint(-9, 9) for j in range(m)] for i in range(n)])
-imgB = cv2.filter2D(imgB, -1, kernelB)
-imgG = cv2.filter2D(imgG, -1, kernelG)
-imgR = cv2.filter2D(imgR, -1, kernelR)
-img_5 = cv2.merge([imgB, imgG, imgR])
-cv2.imshow('layer5', img_5)
+# сверточный слой
+convolution = [kernel_1, kernel_2, kernel_3, kernel_4, kernel_5]
+
+# выход 5-ти канальный
+zero_img = np.zeros(shape=(w, h))
+out = np.array([zero_img for i in range(5)])
+for i in range(5):
+    out[i] = conv(img, convolution[i])
 
 # нормализация
-
-imgB = cv2.normalize(imgB, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-imgG = cv2.normalize(imgG, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-imgR = cv2.normalize(imgR, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-
+for i in range(5):
+    out[i] = cv2.normalize(out[i], None, alpha=-1, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
 # reLU
-for i in range(h):
-    for j in range(w):
-       imgB[i][j] = max(0, imgB[i][j])
-       imgG[i][j] = max(0, imgG[i][j])
-       imgR[i][j] = max(0, imgR[i][j])
+for m in range(5):
+    for i in range(h):
+        for j in range(w):
+           out[m][i][j] = max(0, out[m][i][j])
 
-img_6 = cv2.merge([imgB, imgG, imgR])
-cv2.imshow('relu', img_6)
-
-
-# maxpool
-
-imgB = MaxPool(imgB)
-imgG = MaxPool(imgG)
-imgR = MaxPool(imgR)
-
-print(imgB.shape)
-print(imgG.shape)
-print(imgR.shape)
-
-img_7 = cv2.merge([imgB, imgG, imgR])
-cv2.imshow('max_pool', img_7)
+# max-pooling c шагом 1
+zero_img = np.zeros(shape=(w-1, h-1))
+out_res = np.array([zero_img for i in range(5)])
+for m in range(5):
+    out_res[m] = MaxPool(out[m])
 
 # softmax
-for i in range(h-1):
-    for j in range(w-1):
-       img_7[i][j] = Softmax(img_7[i][j])
+for m in range(5):
+    for i in range(h-1):
+        for j in range(w-1):
+            out_res[m][i][j] = Softmax(out_res[m][i][j])
 
-cv2.imshow('softmax', img_7)
-
-cv2.waitKey(0)
+print(out_res.shape)
