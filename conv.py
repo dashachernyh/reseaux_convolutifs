@@ -55,13 +55,18 @@ convolution = [kernel_1, kernel_2, kernel_3, kernel_4, kernel_5]
 
 # выход 5-ти канальный
 zero_img = np.zeros(shape=(w, h))
+
 out = np.array([zero_img for i in range(5)])
 for i in range(5):
     out[i] = conv(img, convolution[i])
 
 # нормализация
 for i in range(5):
-    out[i] = cv2.normalize(out[i], None, alpha=-1, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    out[i] = cv2.normalize(out[i], None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+for i in range(5):
+    cv2.imshow(str(i), out[i])
+
 
 # reLU
 for m in range(5):
@@ -69,16 +74,31 @@ for m in range(5):
         for j in range(w):
            out[m][i][j] = max(0, out[m][i][j])
 
+for i in range(5):
+    cv2.imshow(str(i)+"r", out[i])
+
+
 # max-pooling c шагом 1
 zero_img = np.zeros(shape=(w-1, h-1))
 out_res = np.array([zero_img for i in range(5)])
 for m in range(5):
     out_res[m] = MaxPool(out[m])
 
+for i in range(5):
+    cv2.imshow(str(i)+"m", out_res[i])
+
+img_5 = cv2.merge([out_res[0], out_res[1], out_res[2], out_res[3], out_res[4]])
+
 # softmax
-for m in range(5):
-    for i in range(h-1):
-        for j in range(w-1):
-            out_res[m][i][j] = Softmax(out_res[m][i][j])
+
+for i in range(h-1):
+    for j in range(w-1):
+        img_5[i][j] = Softmax(img_5[i][j])
+
+out_res[0], out_res[1], out_res[2], out_res[3], out_res[4] = cv2.split(img_5)
+
+for i in range(5):
+    cv2.imshow(str(i)+"s", out_res[i])
 
 print(out_res.shape)
+cv2.waitKey(0)
